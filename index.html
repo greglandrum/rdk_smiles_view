@@ -56,6 +56,9 @@
     }
     function draw_with_highlights(mol, details) {
         form_to_details(details);
+        if(details['addStereoAnnotation']){
+            mol.get_stereo_tags();
+        }
         var tdetails = JSON.stringify(details)
         var canvas = document.getElementById('rdkit-canvas');
         mol.draw_to_canvas_with_highlights(canvas, tdetails);
