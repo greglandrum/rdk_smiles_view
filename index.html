@@ -23,19 +23,32 @@
 
 <script src="./RDKit_minimal.js"></script>
 <script>
+   
     onRuntimeInitialized: initRDKitModule().then(function (instance) {
         RDKitModule = instance;
         console.log('version: ' + RDKitModule.version());
         callback("CC(=O)Oc1ccccc1C(=O)O");
     });
+
+
+    // const {remote, ipcRenderer} = require('electron');
+
+    // const mainProcess = remote.require('./main.js');
+    // ipcRenderer.on('option-changed', (evt, key, value) => {
+    //   alert('foo');
+    //   console.log('option changed', key, value);
+    // });
+
     function form_to_details(details) {
-        var controls = ["addAtomIndices", "addBondIndices", "explicitMethyl", "addStereoAnnotation",
-    "comicMode"];
+        var controls = [
+            'addAtomIndices', 'addBondIndices', 'explicitMethyl', 'addStereoAnnotation',
+            'comicMode'
+        ];
         for (i in controls) {
             var control = controls[i];
             details[control] = document.getElementById(control).checked
         }
-        var texts = ["legend", "bondLineWidth", "legendFontSize"];
+        var texts = ['legend', 'bondLineWidth', 'legendFontSize'];
         for (i in texts) {
             var control = texts[i];
             details[control] = document.getElementById(control).value
@@ -44,77 +57,61 @@
     function draw_with_highlights(mol, details) {
         form_to_details(details);
         var tdetails = JSON.stringify(details)
-        var canvas = document.getElementById("rdkit-canvas");
+        var canvas = document.getElementById('rdkit-canvas');
         mol.draw_to_canvas_with_highlights(canvas, tdetails);
-
     }
     function draw(mol) {
         var details = {};
         draw_with_highlights(mol, details);
     }
-    function callback(text, update_descrs) {
+    function callback(text) {
         var mol = RDKitModule.get_mol(text);
         if (mol.is_valid()) {
             draw(mol);
-            var ob = document.getElementById("can_smiles");
-            ob.outerHTML = "<div id='can_smiles'>" + mol.get_smiles() + "</div>";
+            var ob = document.getElementById('can_smiles');
+            ob.outerHTML = '<div id=\'can_smiles\'> <b>Canonical SMILES:</b> ' + mol.get_smiles() + '</div>';
         }
         mol.delete();
     }
     function name_callback(text) {
         const Http = new XMLHttpRequest();
-        if(text.startsWith('CHEMBL')){
-            const url = 'https://www.ebi.ac.uk/chembl/api/data/molecule/' + text +'.json';
-            Http.open("GET", url);
+        if (text.startsWith('CHEMBL')) {
+            const url =
+                'https://www.ebi.ac.uk/chembl/api/data/molecule/' + text + '.json';
+            Http.open('GET', url);
             Http.send();
-            Http.onreadystatechange = function() {
-                if (this.readyState==4 && this.status==200 && Http.responseText) {
-                    document.getElementById("legend").value = text;
+            Http.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200 && Http.responseText) {
+                    document.getElementById('legend').value = text;
                     var resp = JSON.parse(Http.responseText);
                     var smi = resp['molecule_structures']['canonical_smiles'];
                     var ctab = resp['molecule_structures']['molfile'];
-                    document.getElementById("smiles_input").value = smi;
-                    document.getElementById("ctab_input").value = ctab;
+                    document.getElementById('smiles_input').value = smi;
+                    document.getElementById('ctab_input').value = ctab;
                     callback(ctab);
                 }
             }
 
         } else {
-            const url = 'https://cactus.nci.nih.gov/chemical/structure/'+encodeURI(text)+'/smiles';
-            Http.open("GET", url);
+            const url = 'https://cactus.nci.nih.gov/chemical/structure/' +
+                encodeURI(text) + '/smiles';
+            Http.open('GET', url);
             Http.send();
             Http.onreadystatechange = (e) => {
-                if(Http.responseText){
-                  document.getElementById("legend").value = text;
-                  document.getElementById("smiles_input").value=Http.responseText;
-                  callback(Http.responseText);
+                if (Http.responseText) {
+                    document.getElementById('legend').value = text;
+                    document.getElementById('smiles_input').value = Http.responseText;
+                    callback(Http.responseText);
                 }
             }
         }
-
     }
     function sma_callback(text) {
         var qmol = RDKitModule.get_qmol(text);
-        var mol = RDKitModule.get_mol(document.getElementById("smiles_input").value);
+        var mol = RDKitModule.get_mol(document.getElementById('smiles_input').value);
         if (mol.is_valid() && qmol.is_valid()) {
             var mdetails = mol.get_substruct_match(qmol);
             var match = JSON.parse(mdetails);
-            if (match.atoms && match.atoms.length) draw_with_highlights(mol, match);
-        }
-        mol.delete();
-        qmol.delete();
-    }
-    function template_callback(text) {
-        if (text == "") {
-            text = document.getElementById("template_input").value;
-        }
-        var qmol = RDKitModule.get_mol(text);
-        var mol = RDKitModule.get_mol(document.getElementById("smiles_input").value);
-        if (mol.is_valid() && qmol.is_valid()) {
-            var mdetails = mol.get_substruct_match(qmol);
-            var match = JSON.parse(mdetails);
-            var useCoordgen = document.getElementById("useCoordgen").checked;
-            mol.generate_aligned_coords(qmol, useCoordgen);
             if (match.atoms && match.atoms.length) draw_with_highlights(mol, match);
         }
         mol.delete();
@@ -126,38 +123,28 @@
         if (sma) {
             sma_callback(sma);
         } else {
-            callback(smi, false);
+            callback(smi);
         }
-    }
-    function abbreviation_option_changed(cb) {
-        var smi = document.getElementById('smiles_input').value;
-        var mol = RDKitModule.get_mol(smi);
-        if (document.getElementById('useAbbreviations').checked) {
-            var useLinkers = document.getElementById('useLinkers').checked;
-            var maxCoverage = +(document.getElementById('maxCoverage').value);
-            mol.condense_abbreviations(maxCoverage, useLinkers);
-        }
-        draw(mol);
     }
 </script>
 
 <body style="background: white;">
 
-    <div class="container-fluid col-md-8">
+    <div class="container-fluid col-md-12">
         <div id="molecule">
             <canvas id="rdkit-canvas" width="400" height="300" >
             </canvas>
         </div>
-    </div>
-    <div id="props" class="container-fluid col-md-4">
-                <h2>Computed properties</h2>
-                <div id="can_smiles"></div>
+        <div id="can_smiles"></div>
     </div>
     <div class="container-fluid col-md-8">
-            SMILES: <input id="smiles_input" type="text" value="CC(=O)Oc1ccccc1C(=O)O" onkeyup="callback(this.value,true)">
-            SMARTS: <input id="smarts_input" type="text" value="" onkeyup="sma_callback(this.value)">
+            Mol: <textarea id="smiles_input" cols="60" rows="20" value="" 
+                   onkeyup="callback(this.value,true)">CC(=O)Oc1ccccc1C(=O)O</textarea>
+            <br />SMARTS: <input id="smarts_input" type="text" value="" onkeyup="sma_callback(this.value)">
             <br />NAME: <input id="name_input" type="text" value="" 
     onkeyup="if(event.code =='Enter') {name_callback(this.value,true);}">
+    </div>
+    <div class="container-fluid col-md-4">
             <br/><input type="checkbox" id="addAtomIndices" name="atomIndices" onclick="option_changed(this);">
             <label for="addAtomIndices">atomIndices</label>
             <input type="checkbox" id="addBondIndices" name="bondIndices" onclick="option_changed(this);">
@@ -177,33 +164,6 @@
             for="bondLineWidth">bondLineWidth</label>
             
     </div>
-    <div id="ctab" class="container-fluid col-md-4">
-        <h2>MolBlock</h2>
-        <textarea id="ctab_input" cols="60" rows="20" value="" 
-           onkeyup="callback(this.value)"></textarea>
-    </div>
-    <div id="abbrev-div" class="container-fluid col-md-8">
-            <h1>Abbreviations</h1>
-            <input type="checkbox" id="useAbbreviations" name="useAbbreviations"
-                onclick="abbreviation_option_changed(this);" />
-            <label for="useAbbreviations">Use Abbreviations</label>
-            <input type="checkbox" id="useLinkers" name="useLinkers" onclick="abbreviation_option_changed(this);" />
-            <label for="useLinkers">Use Linkers</label>
-            <input type="text" id="maxCoverage" value="0.4" name="maxCoverage"
-                onclick="abbreviation_option_changed(this);" />
-            <label for="maxCoverage">Max Coverage</label>
-    </div>
-
-
-    <div id="template-div" class="container-fluid col-md-8">
-            <h1>Template Mol Block</h1>
-            <input type="checkbox" id="useCoordgen" name="use_coordgen" onclick="template_callback('');">
-            <label for="useCoordgen">useCoordgen</label>
-            <br>
-            <textarea id="template_input" cols="80" rows="20" value=""
-                onkeyup="template_callback(this.value)"></textarea>
-    </div>
-
 
 </body>
 </html>
