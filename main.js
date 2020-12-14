@@ -1,10 +1,18 @@
 const {app, BrowserWindow} = require('electron')
 
+const nativeImage = require('electron').nativeImage;
+var image = nativeImage.createFromPath(__dirname + '/img/logo_plain.128.png');
+
+
 let mainWindow = null;
 
 function createWindow() {
-  mainWindow = new BrowserWindow(
-      {width: 800, height: 600, webPreferences: {nodeIntegration: true}})
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    icon: image,
+    webPreferences: {nodeIntegration: true}
+  })
 
   mainWindow.loadFile('index.html')
 }
