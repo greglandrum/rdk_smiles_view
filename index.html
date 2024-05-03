@@ -78,6 +78,8 @@
             draw(mol);
             var ob = document.getElementById('can_smiles');
             ob.outerHTML = '<div id=\'can_smiles\'> <b>Canonical SMILES:</b> ' + mol.get_cxsmiles() + '</div>';
+            var ob = document.getElementById('mol_block');
+            ob.outerHTML = '<div id=\'mol_block\'><pre>\n' + mol.get_v3Kmolblock() + '</pre></div>';
         }
         mol.delete();
     }
@@ -140,7 +142,7 @@
 
     <div class="container-fluid col-md-12">
         <div id="molecule">
-            <canvas id="rdkit-canvas" width="500" height="400" >
+            <canvas id="rdkit-canvas" width="600" height="500" >
             </canvas>
         </div>
         <div id="can_smiles"></div>
@@ -178,6 +180,9 @@
             <input type="number" id="bondLineWidth" onkeyup="option_changed(this);"><label
             for="bondLineWidth">bondLineWidth</label>
             
+    </div>
+    <div class="container-fluid col-md-12">
+        <div id="mol_block"></div>
     </div>
 
 </body>
