@@ -122,7 +122,11 @@
         if (mol.is_valid() && qmol.is_valid()) {
             var mdetails = mol.get_substruct_match(qmol);
             var match = JSON.parse(mdetails);
-            if (match.atoms && match.atoms.length) draw_with_highlights(mol, match);
+            if (match.atoms && match.atoms.length) { 
+                draw_with_highlights(mol, match);
+            } else {
+                draw_with_highlights(mol, {});
+            }
         }
         mol.delete();
         qmol.delete();
